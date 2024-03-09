@@ -8,7 +8,7 @@ library(ggdag)
 library(dagitty)
 
 #set working directory----
-setwd("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses")
+setwd("~/.../cephalopod_analyses")
 #read in data and phylogenies
 cephtreeMCC <- read.nexus("cephtreeMCC.tree") #consensus (maximum clade credibility) tree
 cephtrees100 <- read.nexus("cephtrees100.trees") #100 trees sampled from posterior distribution
