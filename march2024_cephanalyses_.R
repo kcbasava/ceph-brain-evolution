@@ -276,3 +276,4 @@ for (i in seq_along(m5.min_loops)) {
 #combine models
 m5mindepth_comb <- combine_models(m5.min_loops[[i]])
 summary(m5mindepth_comb)
+
