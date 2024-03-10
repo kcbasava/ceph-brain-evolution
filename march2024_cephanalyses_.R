@@ -26,7 +26,7 @@ load("cephdag.rda")
 adjustmentSets(cephdag, outcome="CNS", exposure="maturity")
 # { ML, WoS, benthic, depth, latitude, lifespan, phylogeny }
 
-## main model: maximum age of sexual maturity and lifespan 100 phylogenies----
+## main model: maximum age of sexual maturity and lifespan----
 m1.smmax <- brm(bf(CNS.1 ~ mi(ML.1) + mi(lifespan.max) + mi(matage.max) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) + 
                   bf(matage.max | mi() ~ 1 + mi(ML.1) + mi(lifespan.max) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) + 
                   bf(lifespan.max | mi() ~ 1 + mi(ML.1) + WoS + benthic + depth.mean + (1|gr(phy.species,cov=cormat))) + 
@@ -72,7 +72,7 @@ summary(m1.sm)
 adjustmentSets(cephdag, outcome="CNS", exposure="sociality")
 # { WoS, benthic, depth, phylogeny }
 
-## binary sociality over 100 phylogenies----
+## main model: binary sociality----
 m2.soc <- brm(bf(CNS.1 ~ mi(ML.1) + sociality.bin + WoS + benthic + depth.mean + (1|gr(phy.species,cov=cormat))) + 
                 bf(ML.1 | mi() ~ 1 + benthic + depth.mean + (1|gr(phy.species, cov=cormat))), 
               data=st.cephdat, 
@@ -115,7 +115,7 @@ summary(m2.soc3)
 adjustmentSets(cephdag, outcome="CNS", exposure="behavior")
 # { WoS, depth, latitude, phylogeny }
 
-## antipredator repertoire with 100 phylogenies----
+## main model: antipredator repertoire----
 m3.antipr <- brm(bf(CNS.1 ~ mi(ML.1) +  mi(defense.repertoire) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) +
                    bf(ML.1 | mi() ~ 1 + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat)))+
                    bf(defense.repertoire | mi() ~ 1 + benthic + WoS + (1|gr(phy.species,cov=cormat))),
@@ -141,7 +141,7 @@ m3.antipr_comb <- combine_models(m3.antipr_loops[[i]])
 summary(m3.antipr_comb)
 save(m3.antipr_comb, file="m3.antipr100.rda")
 
-## hunting repertoire with 100 phylogenies----
+## main model: hunting repertoire----
 m3.hunt <- brm(bf(CNS.1 ~ mi(ML.1) +  mi(foraging.repertoire) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) +
                  bf(ML.1 | mi() ~ 1 + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat)))+
                  bf(foraging.repertoire | mi() ~ 1 + benthic + WoS + (1|gr(phy.species,cov=cormat))),
@@ -171,7 +171,7 @@ save(m3.hunt_comb, file="m3.hunt100.rda")
 #Prediction 4: Ecological complexity----
 adjustmentSets(cephdag, outcome="CNS", exposure="diet")
 # { ML, WoS, benthic, depth, latitude, phylogeny }
-## diet breadth over 100 phylogenies----
+## main model: diet breadth ----
 m4.diet <- brm(bf(CNS.1 ~ mi(ML.1) + mi(diet.breadth) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) +
                  bf(diet.breadth | mi() ~ 1 + mi(ML.1) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) +
                  bf(ML.1 | mi() ~ 1 + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))),
@@ -197,7 +197,7 @@ m4.diet_comb <- combine_models(m4.diet_loops[[i]])
 save(m4.diet_comb, file="m4diet100.rda")
 summary(m4.diet_comb)
 
-## predator breadth over 100 phylogenies----
+## main model: predator breadth ----
 adjustmentSets(cephdag, outcome="CNS", exposure="predators")
 # { ML, WoS, benthic, depth, latitude }
 m5.preds <- brm(bf(CNS.1 ~ mi(ML.1) + mi(predator.breadth) + depth.mean + pos.latmean + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
@@ -225,7 +225,7 @@ m5.preds_comb <- combine_models(m5.preds_loops[[i]])
 summary(m5.preds_comb)
 plot(conditional_effects(m5.preds, effects = "predator.breadth", resp = "CNS1"), points = TRUE)
 
-## latitude range 100 phylogenies----
+## main model: latitude range ----
 adjustmentSets(cephdag, exposure="latitude", outcome="CNS") 
 # { WoS, benthic, phylogeny }
 m5.latrange <- brm(bf(CNS.1 ~ mi(ML.1) + lat.range + WoS + benthic + (1 | gr(phy.species, cov = cormat))) +
@@ -251,3 +251,28 @@ for (i in seq_along(m5.latrange_loops)) {
 m5.latrange_comb <- combine_models(m5.latrange_loops[[i]])
 save(m5.latrange_comb, file="m5latrange100.rda")
 summary(m5.latrange_comb)
+
+## main model: minimum depth----
+m5.mindepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
+                     bf(ML.1 | mi() ~ 1 + depth.min  + benthic + (1 | gr(phy.species, cov = cormat))),
+                   prior = c(prior(normal(0,1), class = Intercept),
+                             prior(normal(0,0.5), class = b)),
+                   data = st.cephdat,
+                   data2 = list(cormat=ceph100_cormat[[1]]),
+                   backend = "cmdstanr",
+                   cores = 4)
+summary(m5x.mindepth) 
+
+#loop model over list of matrices
+m5.min_loops <- vector("list", 100) 
+for (i in seq_along(m5.min_loops)) {
+  m5.min_loops[[i]] <- update(m5.mindepth,
+                              data2 = list(cormat = ceph100_cormat[[i]],
+                                           backend = "cmdstanr",
+                                           cores = 4)
+  )
+}
+
+#combine models
+m5mindepth_comb <- combine_models(m5.min_loops[[i]])
+summary(m5mindepth_comb)
