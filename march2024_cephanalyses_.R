@@ -115,6 +115,32 @@ summary(m2.soc3)
 adjustmentSets(cephdag, outcome="CNS", exposure="behavior")
 # { WoS, depth, latitude, phylogeny }
 
+##main model: summed cognition and social behaviors----
+m3.cog2 <- brm(bf(CNS.1 ~ mi(ML.1) +  mi(cog2) + benthic + articles.read + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) +
+                 bf(ML.1 | mi() ~ 1 + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat)))+
+                 bf(cog2 | mi() ~ 1 + benthic + articles.read + (1|gr(phy.species,cov=cormat))),
+               family=gaussian,
+               data=st.cephdat,
+               data2=list(cormat=ceph100_cormat[[1]]),
+               prior = c(prior(normal(0,1), class = Intercept),
+                         prior(normal(0,0.5), class = b)),
+               backend="cmdstanr", cores=4)
+
+#loop model over list of matrices
+m3.cog2_loops <- vector("list", 100) 
+for (i in seq_along(m3.cog2_loops)) {
+  m3.cog2_loops[[i]] <- update(m3.cog2,
+                                 data2 = list(cormat = ceph100_cormat[[i]],
+                                              backend = "cmdstanr",
+                                              cores = 4)
+  )
+}
+
+#combine models
+m3.cog2_comb <- combine_models(m3.cog2_loops[[i]])
+summary(m3.cog2_comb)
+save(m3.cog2_comb, file="m3.antipr100.rda")
+
 ## main model: antipredator repertoire----
 m3.antipr <- brm(bf(CNS.1 ~ mi(ML.1) +  mi(defense.repertoire) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) +
                    bf(ML.1 | mi() ~ 1 + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat)))+
@@ -197,6 +223,18 @@ m4.diet_comb <- combine_models(m4.diet_loops[[i]])
 save(m4.diet_comb, file="m4diet100.rda")
 summary(m4.diet_comb)
 
+## sensitivity check: diet habitat interaction----
+m4.db <- brm(bf(CNS.1 ~ mi(ML.1) + mi(diet.breadth)*benthic + depth.mean + pos.latmean + articles.read + (1|gr(phy.species,cov=cormat))) +
+               bf(diet.breadth | mi() ~ 1 + mi(ML.1) + articles.read + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) +
+               bf(ML.1 | mi() ~ 1 + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))),
+             family=gaussian,
+             data=st.cephdat,
+             data2=list(cormat=cormat),
+             prior = c(prior(normal(0,1), class = Intercept),
+                       prior(normal(0,0.5), class = b)),
+             backend="cmdstanr", cores=4)
+summary(m4.db)
+
 ## main model: predator breadth ----
 adjustmentSets(cephdag, outcome="CNS", exposure="predators")
 # { ML, WoS, benthic, depth, latitude }
@@ -225,6 +263,45 @@ m5.preds_comb <- combine_models(m5.preds_loops[[i]])
 summary(m5.preds_comb)
 plot(conditional_effects(m5.preds, effects = "predator.breadth", resp = "CNS1"), points = TRUE)
 
+## sensitivity check: predator breadth habitat interaction----
+m5.phab <- brm(bf(CNS.1 ~ mi(ML.1) + mi(predator.breadth)*benthic + WoS + depth.mean + pos.latmean + (1 | gr(phy.species, cov = cormat))) +
+                 bf(predator.breadth | mi() ~ 1 + mi(ML.1) + WoS + benthic + depth.mean + pos.latmean + (1 | gr(phy.species, cov = cormat))) +
+                 bf(ML.1 | mi() ~ 1 + benthic + depth.mean + pos.latmean + (1 | gr(phy.species, cov = cormat))),
+               family = gaussian,
+               prior = c(prior(normal(0,1), class = Intercept),
+                         prior(normal(0,0.5), class = b)),
+               data = st.cephdat,
+               data2 = list(cormat=cormat),
+               backend = "cmdstanr", cores = 4)
+summary(m5.phab) 
+
+## main model: habitat----
+m5.hab3 <- brm(bf(CNS.1 ~ mi(ML.1) + habitat3 + WoS + (1 | gr(phy.species, cov = cormat))) +
+                 bf(ML.1 | mi() ~ 1 + WoS + (1 | gr(phy.species, cov = cormat))),
+               prior = c(prior(normal(0, 1), class = Intercept),
+                         prior(normal(0,0.5), class = b)),
+               data = st.cephdat,
+               data2 = list(cormat=ceph100_cormat[[1]]),
+               backend = "cmdstanr",
+               cores = 4)
+summary(m5.hab3)
+
+#loop model over list of matrices
+m5.hab3_loops <- vector("list", 100) 
+for (i in seq_along(m5.hab3_loops)) {
+  m5.hab3_loops[[i]] <- update(m5.hab3,
+                               data2 = list(cormat = ceph100_cormat[[i]],
+                                            backend = "cmdstanr",
+                                            cores = 4)
+  )
+}
+
+#combine models
+m5.hab3_comb <- combine_models(m5.hab3_loops[[i]])
+summary(m5.hab3_comb)
+conditional_effects(m5.hab3_comb, effects = "habitat3", resp = "CNS1")
+save(m5.hab3_comb, file="m5.hab100.rda")
+
 ## main model: latitude range ----
 adjustmentSets(cephdag, exposure="latitude", outcome="CNS") 
 # { WoS, benthic, phylogeny }
@@ -252,6 +329,17 @@ m5.latrange_comb <- combine_models(m5.latrange_loops[[i]])
 save(m5.latrange_comb, file="m5latrange100.rda")
 summary(m5.latrange_comb)
 
+#sensitvity check: mean latitude
+m5.latmean <- brm(bf(CNS.1 ~ mi(ML.1) + pos.latmean + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
+                    bf(ML.1 | mi() ~ 1 + pos.latmean + benthic + (1 | gr(phy.species, cov = cormat))),
+                  prior = c(prior(normal(0,1), class = Intercept),
+                            prior(normal(0,0.5), class = b)),
+                  data = st.cephdat,
+                  data2 = list(cormat=cormat),
+                  backend = "cmdstanr",
+                  cores = 4)
+summary(m5.latmean)
+
 ## main model: minimum depth----
 m5.mindepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
                      bf(ML.1 | mi() ~ 1 + depth.min  + benthic + (1 | gr(phy.species, cov = cormat))),
@@ -261,7 +349,6 @@ m5.mindepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min + benthic + WoS + (1 | gr(phy
                    data2 = list(cormat=ceph100_cormat[[1]]),
                    backend = "cmdstanr",
                    cores = 4)
-summary(m5x.mindepth) 
 
 #loop model over list of matrices
 m5.min_loops <- vector("list", 100) 
@@ -276,4 +363,54 @@ for (i in seq_along(m5.min_loops)) {
 #combine models
 m5mindepth_comb <- combine_models(m5.min_loops[[i]])
 summary(m5mindepth_comb)
+save(m5mindepth_comb, "m5mindepth100.rda")
 
+## main model: minimum depth interaction w/ habitat----
+m5.mindb <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min*benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
+                  bf(ML.1 | mi() ~ 1 + (1 | gr(phy.species, cov = cormat))),
+                prior = c(prior(normal(0,1), class = Intercept),
+                          prior(normal(0,0.5), class = b)),
+                data = st.cephdat,
+                data2 = list(cormat=cormat),
+                backend = "cmdstanr",
+                cores = 4)
+
+#loop model over list of matrices
+m5.mindb_loops <- vector("list", 100) 
+for (i in seq_along(m5.mindb_loops)) {
+  m5.mindb_loops[[i]] <- update(m5.mindb,
+                                data2 = list(cormat = ceph100_cormat[[i]],
+                                             backend = "cmdstanr",
+                                             cores = 4)
+  )
+}
+
+#combine models
+m5mindb_comb <- combine_models(m5.mindb_loops[[i]])
+save(m5mindb_comb, file="m5mindb100.rda")
+summary(m5mindb_comb)
+
+## main model: maximum depth interaction w/ habitat----
+m5.maxdb <- brm(bf(CNS.1 ~ mi(ML.1) + depth.max*benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
+                     bf(ML.1 | mi() ~ 1 + (1 | gr(phy.species, cov = cormat))),
+                   prior = c(prior(normal(0,1), class = Intercept),
+                             prior(normal(0,0.5), class = b)),
+                   data = st.cephdat,
+                   data2 = list(cormat = ceph100_cormat[[i]]),
+                   backend = "cmdstanr",
+                   cores = 4)
+
+#loop model over list of matrices
+m5.maxdb_loops <- vector("list", 100) 
+for (i in seq_along(m5.maxdb_loops)) {
+  m5.maxdb_loops[[i]] <- update(m5.maxdb,
+                                data2 = list(cormat = ceph100_cormat[[i]],
+                                             backend = "cmdstanr",
+                                             cores = 4)
+  )
+}
+
+#combine models
+m5maxdb_comb <- combine_models(m5.maxdb_loops[[i]])
+save(m5maxdb_comb, file="m5maxdb100.rda")
+summary(m5maxdb_comb)
