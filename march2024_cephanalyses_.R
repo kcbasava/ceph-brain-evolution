@@ -69,6 +69,20 @@ m1.smmin <- brm(bf(CNS.1 ~ mi(ML.1) + mi(lifespan.min) + mi(matage.min) + WoS + 
 summary(m1.smmin)
 save(m1.smmin, file="m1smmin.rda")
 
+## and check with mean age on consensus phylogeny----
+m1.sm <- brm(bf(CNS.1 ~ mi(ML.1) + mi(lifespan.mean) + mi(matage.mean) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) + 
+               bf(matage.mean | mi() ~ 1 + mi(ML.1) + mi(lifespan.mean) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) + 
+               bf(lifespan.mean | mi() ~ 1 + mi(ML.1) + WoS + benthic + depth.mean + (1|gr(phy.species,cov=cormat))) + 
+               bf(ML.1 | mi() ~ 1 + benthic + depth.mean + pos.latmean + (1|gr(phy.species, cov=cormat))), 
+             data=st.cephdat, 
+             data2=list(cormat=cormat), 
+             prior = c(prior(normal(0,1), class = Intercept),
+                       prior(normal(0,0.5), class = b)),
+             iter = 4000, chains = 4,
+             backend="cmdstanr", cores=4)
+summary(m1.sm)
+save(m1.sm, file="m1sm.rda")
+
 #Prediction # 2: Sociality-----
 adjustmentSets(cephdag, outcome="CNS", exposure="sociality")
 # { WoS, benthic, depth, phylogeny }
@@ -234,7 +248,7 @@ m4.diet_comb <- combine_models(m4.diet_loops[[i]])
 save(m4.diet_comb, file="m4diet100.rda")
 summary(m4.diet_comb)
 
-## diet-benthic interaction consensus phylogeny----
+## diet-benthic interaction----
 m4.dhab0 <- brm(bf(CNS.1 ~ mi(ML.1) + mi(diet.breadth)*benthic + depth.mean + pos.latmean + articles.read + (1|gr(phy.species,cov=cormat))) +
                  bf(diet.breadth | mi() + resp_trunc(lb=-2.1) ~ 1 + mi(ML.1) + articles.read + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) +
                  bf(ML.1 | mi() ~ 1 + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))),
@@ -336,10 +350,10 @@ for (i in seq_along(m5.hab_loops)) {
 }
 
 #combine models
-m5.hab_comb <- combine_models(m5.hab_loops[[i]])
-summary(m5.hab_comb)
-conditional_effects(m5.hab_comb, effects = "habitat3", resp = "CNS1")
-save(m5.hab_comb, file="m5.hab100.rda")
+m5.hab3_comb <- combine_models(m5.hab_loops[[i]])
+summary(m5.hab3_comb)
+conditional_effects(m5.hab3_comb, effects = "habitat3", resp = "CNS1")
+save(m5.hab3_comb, file="m5.hab100.rda")
 
 ## sensitivity check: benthic vs. pelagic----
 m5.benth <- brm(bf(CNS.1 ~ mi(ML.1) + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
@@ -353,6 +367,7 @@ m5.benth <- brm(bf(CNS.1 ~ mi(ML.1) + benthic + WoS + (1 | gr(phy.species, cov =
                 cores = 4)
 summary(m5.benth)
 save(m5.benth, file="m5benth.rda")
+load(file="m5benth.rda")
 
 ## latitude range on consensus phylogeny----
 adjustmentSets(cephdag, exposure="latitude", outcome="CNS") 
@@ -370,7 +385,7 @@ save(m5.latrange, file="m5.latrange.rda")
 
 load(file="m5.latrange.rda")
 
-# mean latitude on consensus phylogeny----
+## mean latitude on consensus phylogeny----
 m5.latmean <- brm(bf(CNS.1 ~ mi(ML.1) + pos.latmean + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
                     bf(ML.1 | mi() ~ 1 + pos.latmean + benthic + (1 | gr(phy.species, cov = cormat))),
                   prior = c(prior(normal(0,1), class = Intercept),
@@ -395,7 +410,7 @@ m5.mindepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min + benthic + WoS + (1 | gr(phy
 summary(m5.mindepth) 
 save(m5.mindepth, file="m5mindepth.rda")
 
-#max depth on consensus phylogeny----
+## max depth on consensus phylogeny----
 m5.maxdepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.max + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
                      bf(ML.1 | mi() ~ 1 + (1 | gr(phy.species, cov = cormat))),
                    prior = c(prior(normal(0,1), class = Intercept),
@@ -403,8 +418,8 @@ m5.maxdepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.max + benthic + WoS + (1 | gr(phy
                    data = st.cephdat,
                    data2 = list(cormat = cormat),
                    backend = "cmdstanr",
+                   iter=4000, chains=4,
                    cores = 4)
-plot(conditional_effects(m5.maxdepth, effects = "depth.max", resp = "CNS1"), points = TRUE)
 summary(m5.maxdepth)
 save(m5.maxdepth, file="m5.maxdepth.rda")
 
@@ -459,5 +474,19 @@ for (i in seq_along(m5.maxdb_loops)) {
 m5maxdb_comb <- combine_models(m5.maxdb_loops[[i]])
 save(m5maxdb_comb, file="m5maxdb100.rda")
 summary(m5maxdb_comb)
+
+## depth range on conesnsus phylogeny----
+# { WoS, benthic, phylogeny }
+m5.depthrange <- brm(bf(CNS.1 ~ mi(ML.1) + depth.range + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
+                       bf(ML.1 | mi() ~ 1 + depth.range + benthic + (1 | gr(phy.species, cov = cormat))),
+                     prior = c(prior(normal(0, 1), class = Intercept),
+                               prior(normal(0,0.5), class = b)),
+                     data = st.cephdat,
+                     data2 = list(cormat = cormat),
+                     iter=4000,
+                     backend = "cmdstanr",
+                     cores = 4)
+summary(m5.depthrange)
+save(m5.depthrange, file="m5depthrange.rda")
 
 
