@@ -2,8 +2,8 @@ library(ape)
 library(ggdag)
 library(dagitty)
 
-setwd("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses")
-cephdat <- read.csv("cephdat.csv")
+getwd()
+cephdat <- read.csv("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/cephdat.csv")
 View(cephdat)
 
 #standardize function from rethinking (https://rdrr.io/github/rmcelreath/rethinking/src/R/utilities.r)
@@ -17,9 +17,9 @@ standardize <- function(x) {
 
 #log and standardize continuous vars----
 st.cephdat <- cephdat
-View(st.cephdat[c(9:35)])
-st.cephdat[c(9:35)] <- lapply(st.cephdat2[c(9:35)], function(x) round(standardize(log(x)), digits=3))
-st.cephdat <- st.cephdat[,-c(13,14)] #remove original latitude columns with negative values
+View(st.cephdat[c(7:31)])
+st.cephdat[c(7:31)] <- lapply(st.cephdat[c(7:31)], function(x) round(standardize(log(x)), digits=3))
+st.cephdat <- st.cephdat[,-c(11,12)] #remove original latitude columns with negative values
 
 write.csv(st.cephdat, "st.cephdat.csv", row.names=FALSE)
 
