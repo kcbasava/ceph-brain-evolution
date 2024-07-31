@@ -1,8 +1,6 @@
 library(ape)
-library(ggdag)
 library(dagitty)
 
-getwd()
 cephdat <- read.csv("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/cephdat.csv")
 View(cephdat)
 
@@ -21,7 +19,7 @@ View(st.cephdat[c(7:31)])
 st.cephdat[c(7:31)] <- lapply(st.cephdat[c(7:31)], function(x) round(standardize(log(x)), digits=3))
 st.cephdat <- st.cephdat[,-c(11,12)] #remove original latitude columns with negative values
 
-write.csv(st.cephdat, "st.cephdat.csv", row.names=FALSE)
+write.csv(st.cephdat, "/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/st.cephdat.csv", row.names=FALSE)
 
 cephtrees100 <- read.nexus("cephtrees100.trees")
 
@@ -89,3 +87,27 @@ phylogeny -> depth
 phylogeny -> benthic
 }")
 save(cephdag, file="cephdag.rda")
+
+
+cephdag
+adjustmentSets(cephdag, outcome="CNS", exposure="depth")
+#{ WoS, benthic, phylogeny }
+
+adjustmentSets(cephdag, outcome="CNS", exposure="benthic")
+#{phylogeny}
+
+adjustmentSets(cephdag, outcome="CNS", exposure="latitude")
+#{ WoS, benthic, phylogeny }
+
+adjustmentSets(cephdag, outcome="CNS", exposure="diet")
+#{ ML, WoS, benthic, depth, latitude, phylogeny }
+
+adjustmentSets(cephdag, outcome="CNS", exposure="sociality")
+#{ WoS, benthic, depth, phylogeny }
+
+adjustmentSets(cephdag, outcome="CNS", exposure="maturity")
+#{ ML, WoS, benthic, depth, latitude, lifespan, phylogeny }
+
+adjustmentSets(cephdag, outcome="CNS", exposure="behavior") #encompasses cognition, defense, and foraging
+#{ WoS, depth, latitude, phylogeny }
+
