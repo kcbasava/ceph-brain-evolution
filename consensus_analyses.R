@@ -5,7 +5,6 @@ library(ape)
 library(mice)
 library(tidyverse)
 library(cmdstanr)
-library(ggdag)
 library(dagitty)
 options(scipen=999) #turn off scientific notation
 
@@ -39,6 +38,7 @@ m.MLst <- brm(bf(CNS.1 ~ mi(ML.1) + (1 | gr(phy.species, cov = cormat))) +
                    cores = 4)
 summary(m.MLst)
 save(m.MLst, file="m.MLst.rda")
+load()
 
 #age of sexual maturity----
 ## with maximum age of sexual maturity and lifespan----
@@ -305,6 +305,34 @@ m.hab <- brm(bf(CNS.1 ~ mi(ML.1) + habitat3 + WoS + (1 | gr(phy.species, cov = c
 summary(m.hab)
 save(m.hab, file="m.hab.rda")
 
+## latitude range----
+m.latrange <- brm(bf(CNS.1 ~ mi(ML.1) + lat.range + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
+                    bf(ML.1 | mi() ~ 1 + lat.range + benthic + (1 | gr(phy.species, cov = cormat))),
+                  prior = c(prior(normal(0,1), class = Intercept),
+                            prior(normal(0,0.5), class = b)),
+                  data = st.cephdat,
+                  data2 = list(cormat=cormat),
+                  backend = "cmdstanr",
+                  iter=4000,
+                  cores = 4)
+summary(m.latrange)
+save(m.latrange, file="m.latrange.rda")
+
+## distance from equator----
+# rerunning August 2024 for distance from equator not mean 
+m.eqdist <- brm(bf(CNS.1 ~ mi(ML.1) + eq.dist + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
+                    bf(ML.1 | mi() ~ 1 + pos.latmean + benthic + (1 | gr(phy.species, cov = cormat))),
+                  prior = c(prior(normal(0,1), class = Intercept),
+                            prior(normal(0,0.5), class = b)),
+                  data = st.cephdat,
+                  data2 = list(cormat=cormat),
+                  backend = "cmdstanr",
+                  iter=4000,
+                  cores = 4)
+summary(m.eqdist)
+#and that's still nothing
+save(m.eqdist, file="m.eqdist.rda")
+
 ## mean depth----
 m.meandepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.mean + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
                       bf(ML.1 | mi() ~ 1 + (1 | gr(phy.species, cov = cormat))),
@@ -333,8 +361,6 @@ m.maxdepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.max + benthic + WoS + (1 | gr(phy.
                    cores = 4)
 summary(m.maxdepth)
 save(m.maxdepth, file="m.maxdepth.rda")
-
-11*12
 
 ## minimum depth----
 m.mindepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
@@ -407,17 +433,11 @@ save(m.depthcat, file="m.depthcat.rda")
 #ASR and signal----
 library(phytools)
 library(mice)
-library(viridis)
-library(tidyverse)
-library(plotrix)
-remotes::install_github("liamrevell/phytools")
-remotes::install_github("palaeoverse/rphylopic")
-
 
 #decomposition of phylogenetic distance matrix into orthogonal vectors (PVRs)
 phylo.vectors = PVR::PVRdecomp(cephtreeMCC)
 cephdat <- read.csv("cephdat.csv")
-ML.dat <- cephdat[c(1,28,29)]
+ML.dat <- cephdat[c(1,24,25)]
 ML.dat$CNS.1 <- log(ML.dat$CNS.1)
 ML.dat$ML.1 <- log(ML.dat$ML.1)
 ML.dat <- complete(mice(ML.dat)) #imputation
@@ -430,7 +450,6 @@ names(logEQ) <- ML.dat$phy.species
 #ancestral state reconstruction and plot
 ASR <- contMap(cephtreeMCC, logEQ, plot=FALSE)
 
-n_cols <- n_distinct(logEQ)
 length(ASR$cols)
 
 ASR$cols[1:1001]<-colorRampPalette(c("#feba2c","#d6556d","#2a0593"))(1001)
@@ -443,4 +462,3 @@ plot(ASR, type="fan", outline=FALSE, legend = 0.7*max(nodeHeights(cephtreeMCC)),
 save(ASR, file="ASR.rda")
 load(file="ASR.rda")
 plot(ASR)
-
