@@ -1,6 +1,7 @@
 library(ape)
 library(dagitty)
 
+#updating with new depth data november 19, 2024
 cephdat <- read.csv("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/cephdat.csv")
 View(cephdat)
 
@@ -14,11 +15,12 @@ standardize <- function(x) {
 }
 
 #log and standardize continuous vars----
-#I manually changed Argonaut, Chiroteuthic, and Megalocranchia eq.dist to 0.000001 instead of 0 in cephdat.csv so can log
+#I manually changed Argonaut, Chiroteuthis, and Megalocranchia eq.dist to 0.000001 instead of 0 in cephdat.csv so can log
+#and to updated depth measures of 0 
 st.cephdat <- cephdat
 View(st.cephdat[c(7:30)])
 st.cephdat[c(7:30)] <- lapply(st.cephdat[c(7:30)], function(x) round(standardize(log(x)), digits=3))
-st.cephdat <- st.cephdat[,-c(11,12)] #remove original latitude columns with negative values
+st.cephdat <- st.cephdat[,-c(12,13)] #remove original latitude columns with negative values
 
 write.csv(st.cephdat, "/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/st.cephdat.csv", row.names=FALSE)
 
