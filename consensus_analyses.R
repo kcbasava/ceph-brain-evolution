@@ -1,4 +1,5 @@
 #using consensus phylogeny for all models, with the updated dataset April 10, 2024 excluding I. paradoxus
+#UPDATING november 19, 2024 with corrected depth data----
 #load packages----
 library(brms)
 library(ape)
@@ -9,7 +10,7 @@ library(dagitty)
 options(scipen=999) #turn off scientific notation
 
 #set working directory----
-setwd("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses")
+setwd("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution")
 getwd()
 
 #read in data and phylogenies
@@ -54,8 +55,9 @@ m.smmax <- brm(bf(CNS.1 ~ mi(ML.1) + mi(lifespan.max) + mi(matage.max) + WoS + b
                control = list(adapt_delta = 0.89),
                backend="cmdstanr", cores=4)
 summary(m.smmax)
-save(m.smmax, file="m.smmax.rda")
-0.3/0.75
+save(m.smmax, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.smmax.rda")
+0.33/0.75 #0.33 instead of 0.3 mean 
+
 ## minimum age----
 m.smmin <- brm(bf(CNS.1 ~ mi(ML.1) + mi(lifespan.min) + mi(matage.min) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) + 
                   bf(matage.min | mi() ~ 1 + mi(ML.1) + mi(lifespan.min) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) + 
@@ -69,8 +71,9 @@ m.smmin <- brm(bf(CNS.1 ~ mi(ML.1) + mi(lifespan.min) + mi(matage.min) + WoS + b
                 control = list(adapt_delta = 0.89),
                 backend="cmdstanr", cores=4)
 summary(m.smmin)
-save(m.smmin, file="m.smmin.rda")
-0.08/0.75
+save(m.smmin, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.smmin.rda")
+-0.11/0.75 
+
 m.smmean <- brm(bf(CNS.1 ~ mi(ML.1) + mi(lifespan.mean) + mi(matage.mean) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) + 
                  bf(matage.mean | mi() ~ 1 + mi(ML.1) + mi(lifespan.mean) + WoS + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) + 
                  bf(lifespan.mean | mi() ~ 1 + mi(ML.1) + WoS + benthic + depth.mean + (1|gr(phy.species,cov=cormat))) + 
@@ -83,8 +86,9 @@ m.smmean <- brm(bf(CNS.1 ~ mi(ML.1) + mi(lifespan.mean) + mi(matage.mean) + WoS 
                control = list(adapt_delta = 0.89),
                backend="cmdstanr", cores=4)
 summary(m.smmean)
-save(m.smmean, file="m.smmean.rda")
-0.18 /0.75
+save(m.smmean, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.smmean.rda")
+0.26 /0.75 #instead of 0.18
+
 #sociality----
 ## binary----
 m.soc <- brm(bf(CNS.1 ~ mi(ML.1) + sociality.bin + WoS + benthic + depth.mean + (1|gr(phy.species,cov=cormat))) + 
@@ -97,8 +101,9 @@ m.soc <- brm(bf(CNS.1 ~ mi(ML.1) + sociality.bin + WoS + benthic + depth.mean + 
              control = list(adapt_delta = 0.89),
              backend="cmdstanr", cores=4)
 summary(m.soc)
-save(m.soc, file="m.soc.rda")
-0.21/0.75
+save(m.soc, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.soc.rda")
+-0.26/0.75 #-0.26 instead of -0.21
+
 ## 3 category----
 m.soc3 <- brm(bf(CNS.1 ~ mi(ML.1) + sociality.3 + WoS + benthic + depth.mean + (1|gr(phy.species,cov=cormat)))+
                 bf(ML.1 | mi() ~ 1 + benthic + depth.mean + (1|gr(phy.species, cov=cormat))), 
@@ -111,7 +116,7 @@ m.soc3 <- brm(bf(CNS.1 ~ mi(ML.1) + sociality.3 + WoS + benthic + depth.mean + (
               control = list(adapt_delta = 0.89),
               backend="cmdstanr", cores=4)
 summary(m.soc3)
-save(m.soc3, file="m.soc3.rda") 
+save(m.soc3, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.soc3.rda") 
 
 # behavioral complexity----
 #TB's constrained imputation function
@@ -165,7 +170,7 @@ m.cog.empty <- brm(bf(CNS.1 ~ mi(ML.1) +  mi(cog2) + benthic + articles.read + d
 m.cog.constrained <- constrained_imputation(model = m.cog.empty,
                                             vars = c("ML.1", "cog2"))
 summary(m.cog.constrained)
-save(m.cog.constrained, file="m.cog.rda")
+save(m.cog.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.cog.rda")
 
 ## defense repertoire----
 m.def.empty <- brm(bf(CNS.1 ~ mi(ML.1) +  mi(defense.repertoire) + articles.read + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) +
@@ -182,7 +187,7 @@ m.def.empty <- brm(bf(CNS.1 ~ mi(ML.1) +  mi(defense.repertoire) + articles.read
 m.def.constrained <- constrained_imputation(model = m.def.empty, vars = "defense.repertoire")
 
 summary(m.def.constrained)
-save(m.def.constrained, file="m.def.rda")
+save(m.def.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.def.rda")
 effective_sample(m.def.constrained)
 get_variables(m.def.constrained)
 
@@ -206,7 +211,7 @@ m.hunt.empty <- brm(bf(CNS.1 ~ mi(ML.1) +  mi(foraging.repertoire) + articles.re
 m.hunt.constrained <- constrained_imputation(model = m.hunt.empty,
                                               vars = c("ML.1", "foraging.repertoire"))
 summary(m.hunt.constrained)
-save(m.hunt.constrained, file="m.hunt.constrained.rda")
+save(m.hunt.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.hunt.rda")
 
 #ecological richness----
 ## dietary breadth----
@@ -242,7 +247,7 @@ m.dhab.empty <- brm(bf(CNS.1 ~ mi(ML.1) + mi(diet.breadth)*benthic + depth.mean 
 m.dhab.constrained <- constrained_imputation(model = m.dhab.empty, vars = "diet.breadth")
 
 summary(m.dhab.constrained)
-save(m.dhab.constrained, file="m.dhab.rda")
+save(m.dhab.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.dhab.rda")
 min(apply(as_draws_df(m.dhab.constrained, "^Ymi_dietbreadth", regex = TRUE)[which(is.na(st.cephdat$diet.breadth)),], 2, median))
 
 ## number of predator groups----
@@ -260,7 +265,7 @@ m.preds.constrained <- constrained_imputation(model = m.preds.empty, vars = "pre
 
 summary(m.preds.constrained)
 0.08/0.75
-save(m.preds.constrained, file="m.preds.rda")
+save(m.preds.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.preds.rda")
 
 ## predators-benthic interaction----
 m.phab.empty <- brm(bf(CNS.1 ~ mi(ML.1) + mi(predator.breadth)*benthic + articles.read + depth.mean + pos.latmean + (1 | gr(phy.species, cov = cormat))) +
@@ -275,7 +280,7 @@ m.phab.empty <- brm(bf(CNS.1 ~ mi(ML.1) + mi(predator.breadth)*benthic + article
                backend = "cmdstanr", cores = 4)
 m.phab.constrained <- constrained_imputation(model = m.phab.empty, vars = "predator.breadth")
 summary(m.phab.constrained)
-save(m.phab.constrained, file="m.phab.rda")
+save(m.phab.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.phab.rda")
 
 ## habitat binary----
 m.benth <- brm(bf(CNS.1 ~ mi(ML.1) + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
@@ -345,9 +350,9 @@ m.meandepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.mean + benthic + WoS + (1 | gr(ph
                     backend = "cmdstanr",
                     cores = 4)
 summary(m.meandepth)
-save(m.meandepth, file="m.meandepth.rda")
+save(m.meandepth, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.meandepth.rda")
 load(file="m.meandepth.rda")
-0.22/0.75
+
 ## maximum depth----
 m.maxdepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.max + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
                      bf(ML.1 | mi() ~ 1 + (1 | gr(phy.species, cov = cormat))),
@@ -360,7 +365,8 @@ m.maxdepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.max + benthic + WoS + (1 | gr(phy.
                    backend = "cmdstanr",
                    cores = 4)
 summary(m.maxdepth)
-save(m.maxdepth, file="m.maxdepth.rda")
+save(m.maxdepth, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.maxdepth.rda")
+-0.10/75 #instead of -0.22
 
 ## minimum depth----
 m.mindepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
@@ -374,8 +380,9 @@ m.mindepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min + benthic + WoS + (1 | gr(phy.
                   backend = "cmdstanr",
                   cores = 4)
 summary(m.mindepth)
-save(m.mindepth, file="m.mindepth.rda")
-0.14/0.75
+save(m.mindepth, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.mindepth.rda")
+-0.17/0.75 #instead of -0.14
+
 ## benthic*depth----
 m.maxdb <- brm(bf(CNS.1 ~ mi(ML.1) + depth.max*benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
                   bf(ML.1 | mi() ~ 1 + (1 | gr(phy.species, cov = cormat))),
@@ -388,7 +395,7 @@ m.maxdb <- brm(bf(CNS.1 ~ mi(ML.1) + depth.max*benthic + WoS + (1 | gr(phy.speci
                backend = "cmdstanr",
                 cores = 4)
 summary(m.maxdb)
-save(m.maxdb, file="m.maxdb.rda")
+save(m.maxdb, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.maxdb.rda")
 
 m.mindb <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min*benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
                  bf(ML.1 | mi() ~ 1 + (1 | gr(phy.species, cov = cormat))),
@@ -401,7 +408,7 @@ m.mindb <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min*benthic + WoS + (1 | gr(phy.speci
                backend = "cmdstanr",
                cores = 4)
 summary(m.mindb)
-save(m.mindb, file="m.mindb.rda")
+save(m.mindb, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.mindb.rda")
 
 m.meandb <- brm(bf(CNS.1 ~ mi(ML.1) + depth.mean*benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
                  bf(ML.1 | mi() ~ 1 + (1 | gr(phy.species, cov = cormat))),
@@ -414,7 +421,7 @@ m.meandb <- brm(bf(CNS.1 ~ mi(ML.1) + depth.mean*benthic + WoS + (1 | gr(phy.spe
                backend = "cmdstanr",
                cores = 4)
 summary(m.meandb)
-save(m.meandb, file="m.meandb.rda")
+save(m.meandb, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.meandb.rda")
 
 ## depth categories----
 m.depthcat <- brm(bf(CNS.1 ~ mi(ML.1) + depth_cat + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
