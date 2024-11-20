@@ -82,7 +82,7 @@ m1.smmax2 <- brm(bf(CNS.23 ~ ML.23 + mi(lifespan.max) + mi(matage.max) + WoS + b
                            prior(normal(0,0.5), class = b)),
                  backend="cmdstanr", cores=4)
 summary(m1.smmax2)
-# evenly centered around 0 (0.00 [-0.30 - 0.30])
+# somewhat positive 
 
 ## sociality----
 m2.soc2 <- brm(bf(CNS.23 ~ ML.23 + sociality.bin + WoS + benthic + depth.mean + (1|gr(phy.species,cov=cormat))),              data=st.cephdat2, 
@@ -117,8 +117,8 @@ summary(m5.preds2)
 # negative instead of positive
 
 #maximum depth----
-m5.maxdepth2 <- brm(bf(CNS.23 ~ ML.23 + depth.max + benthic + WoS + (1 | gr(phy.species, cov = cormat))),                   prior = c(prior(normal(0,1), class = Intercept),
-                                                                                                                                      prior(normal(0,0.5), class = b)),
+m5.maxdepth2 <- brm(bf(CNS.23 ~ ML.23 + depth.max + benthic + WoS + (1 | gr(phy.species, cov = cormat))),                   
+                    prior = c(prior(normal(0,1), class = Intercept),                                                                                                                  prior(normal(0,0.5), class = b)),
                     data = st.cephdat2,
                     data2 = list(cormat = cormat),
                     backend = "cmdstanr",
