@@ -1,5 +1,6 @@
 #using consensus phylogeny for all models, with the updated dataset April 10, 2024 excluding I. paradoxus
 #UPDATING november 19, 2024 with corrected depth data----
+
 #load packages----
 library(brms)
 library(ape)
@@ -15,10 +16,7 @@ getwd()
 
 #read in data and phylogenies
 cephtreeMCC <- read.nexus("cephtreeMCC.tree") #consensus (maximum clade credibility) tree
-
-cephtrees100 <- read.nexus("cephtrees100.trees") #100 trees sampled from posterior distribution
 cormat <- vcv(cephtreeMCC, corr=TRUE) #correlation matrix for consensus phylogeny
-load("ceph100_cormat.rda") #list of 100 correlation matrices for posterior trees
 st.cephdat <- read.csv("st.cephdat.csv") #logged and standardized data
 st.cephdat$benthic <- factor(st.cephdat$benthic)
 st.cephdat$sociality.bin <- factor(st.cephdat$sociality.bin)
@@ -117,6 +115,18 @@ m.soc3 <- brm(bf(CNS.1 ~ mi(ML.1) + sociality.3 + WoS + benthic + depth.mean + (
               backend="cmdstanr", cores=4)
 summary(m.soc3)
 save(m.soc3, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.soc3.rda") 
+
+## sociality decapodiformes only----
+decadat <- read.csv("decadat.csv")
+m.socdec <- brm(bf(CNS.1 ~ mi(ML.1) + sociality.bin + WoS + benthic + depth.mean + (1|gr(phy.species,cov=cormat))) + 
+                  bf(ML.1 | mi() ~ 1 + benthic + depth.mean + (1|gr(phy.species, cov=cormat))), 
+                prior = c(prior(normal(0,1), class = Intercept),
+                          prior(normal(0,0.5), class = b)),
+                data=decadat, 
+                data2=list(cormat=cormat), 
+                backend="cmdstanr", cores=4)
+summary(m.socdec)
+save(m.socdec, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/nov2024_fits/m.socdec.rda") 
 
 # behavioral complexity----
 #TB's constrained imputation function
@@ -230,7 +240,8 @@ m.diet.constrained <- constrained_imputation(model = m.diet.empty,
                                             vars = c("diet.breadth"))
 
 summary(m.diet.constrained)
-save(m.diet.constrained, file="m.diet.rda")
+save(m.diet.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/nov2024_fits/m.diet.rda")
+load("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.diet.rda")
 
 ## diet-benthic interaction----
 m.dhab.empty <- brm(bf(CNS.1 ~ mi(ML.1) + mi(diet.breadth)*benthic + depth.mean + pos.latmean + articles.read + (1|gr(phy.species,cov=cormat))) +
@@ -245,7 +256,6 @@ m.dhab.empty <- brm(bf(CNS.1 ~ mi(ML.1) + mi(diet.breadth)*benthic + depth.mean 
                backend="cmdstanr", cores=4)
 
 m.dhab.constrained <- constrained_imputation(model = m.dhab.empty, vars = "diet.breadth")
-
 summary(m.dhab.constrained)
 save(m.dhab.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.dhab.rda")
 min(apply(as_draws_df(m.dhab.constrained, "^Ymi_dietbreadth", regex = TRUE)[which(is.na(st.cephdat$diet.breadth)),], 2, median))
@@ -262,7 +272,6 @@ m.preds.empty <- brm(bf(CNS.1 ~ mi(ML.1) + mi(predator.breadth) + depth.mean + b
                 chains=0,
                 backend = "cmdstanr", cores = 4)
 m.preds.constrained <- constrained_imputation(model = m.preds.empty, vars = "predator.breadth")
-
 summary(m.preds.constrained)
 0.08/0.75
 save(m.preds.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.preds.rda")
@@ -309,7 +318,7 @@ m.hab <- brm(bf(CNS.1 ~ mi(ML.1) + habitat3 + WoS + (1 | gr(phy.species, cov = c
               cores = 4)
 summary(m.hab)
 save(m.hab, file="m.hab.rda")
-
+load("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/nov2024_fits/m.hab.rda")
 ## latitude range----
 m.latrange <- brm(bf(CNS.1 ~ mi(ML.1) + lat.range + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
                     bf(ML.1 | mi() ~ 1 + lat.range + benthic + (1 | gr(phy.species, cov = cormat))),
@@ -322,6 +331,7 @@ m.latrange <- brm(bf(CNS.1 ~ mi(ML.1) + lat.range + benthic + WoS + (1 | gr(phy.
                   cores = 4)
 summary(m.latrange)
 save(m.latrange, file="m.latrange.rda")
+load("nov2024_fits/m.latrange.rda")
 
 ## distance from equator----
 # rerunning August 2024 for distance from equator not mean 
@@ -366,7 +376,7 @@ m.maxdepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.max + benthic + WoS + (1 | gr(phy.
                    cores = 4)
 summary(m.maxdepth)
 save(m.maxdepth, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.maxdepth.rda")
--0.10/75 #instead of -0.22
+10/75 #instead of -0.22
 
 ## minimum depth----
 m.mindepth <- brm(bf(CNS.1 ~ mi(ML.1) + depth.min + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
@@ -440,11 +450,11 @@ save(m.depthcat, file="m.depthcat.rda")
 #ASR and signal----
 library(phytools)
 library(mice)
-
+getwd()
 #decomposition of phylogenetic distance matrix into orthogonal vectors (PVRs)
 phylo.vectors = PVR::PVRdecomp(cephtreeMCC)
 cephdat <- read.csv("cephdat.csv")
-ML.dat <- cephdat[c(1,24,25)]
+ML.dat <- cephdat[c("phy.species", "CNS.1", "ML.1")]
 ML.dat$CNS.1 <- log(ML.dat$CNS.1)
 ML.dat$ML.1 <- log(ML.dat$ML.1)
 ML.dat <- complete(mice(ML.dat)) #imputation
