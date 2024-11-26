@@ -82,8 +82,7 @@ h_imp <- st.cephdat
 h_impute <- brms::as_draws_df(m.hab, variable = "^Ymi_ML1", regex = TRUE)
 h_impute$.chain <- NULL; h_impute$.iteration <- NULL; h_impute$.draw <- NULL
 h_miss_idx <- which(is.na(h_imp$ML.1))
-h3_imp <- apply(h_impute[h_miss_idx,], 2, median)
-h_imp[h_miss_idx,]$ML.1 <- h3_imp
+h_imp[h_miss_idx,]$ML.1 <- apply(h_impute[h_miss_idx,], 2, median)
 
 h_grid <- rbind(transform(h_imp, habitat3 = 0),
               transform(h_imp, habitat3 = 1),
@@ -99,11 +98,12 @@ hab_postpts <-
   ggplot(aes(x = habitat3,
              y = .epred)) +
   stat_pointinterval(point_interval=median_hdci) + #by default showing 66% and 95% intervals
-  geom_point(aes(x=as.numeric(habitat3), y = CNS.1), data = h_imp, position = position_jitter(width = 0.15), colour='blue') +
+  geom_point(aes(x=as.numeric(habitat3)-1, y = CNS.1), data = h_imp, position = position_jitter(width = 0.15), colour='blue') +
   labs(x="Habitat", y = "CNS") +
-  scale_x_continuous(breaks=c(0,1,2), labels=(c("pelagic", "variable", "benthic"))) + theme(axis.text.x=element_text(size=11)) + theme_classic()
+  scale_x_continuous(breaks=c(1,2,3), labels=(c("pelagic", "variable", "benthic"))) + theme(axis.text.x=element_text(size=11)) + theme_classic()
 hab_postpts <- hab_postpts + theme_classic()
 hab_postpts
+save(hab_postpts, file="nov24_hab_postpts.rda")
 
 ##binary benthic----
 bp_imp <- st.cephdat
@@ -111,7 +111,6 @@ bp_imp <- st.cephdat
 bp_impute <- brms::as_draws_df(m.benth, variable = "^Ymi_ML1", regex = TRUE)
 bp_impute$.chain <- NULL; bp_impute$.iteration <- NULL; bp_impute$.draw <- NULL
 bp_miss_idx <- which(is.na(bp_imp$ML.1))
-bp_imp <- apply(s2_impute[bp_miss_idx,], 2, median)
 bp_imp[bp_miss_idx,]$ML.1 <- apply(bp_impute[bp_miss_idx,], 2, median)
 
 View(bp_imp)
@@ -130,13 +129,14 @@ bp_postpts <- bp_imp.epred |>
   ggplot(aes(x = benthic,
              y = .epred)) +
   stat_pointinterval(point_interval=median_hdci) +
-  geom_point(aes(x = as.numeric(benthic), y = CNS.1), data = bp_imp, position=position_jitter(width = 0.15), colour='blue') +
+  geom_point(aes(x = as.numeric(benthic)-1, y = CNS.1), data = bp_imp, position=position_jitter(width = 0.15), colour='blue') +
   labs(x="Habitat", y = "CNS") +
   scale_x_continuous(breaks=c(0,1), labels=(c("pelagic","benthic"))) + theme(axis.text.x=element_text(size=11)) + theme_classic()
 bp_postpts
+save(bp_postpts, file="nov24_bp_postpts.rda")
 
 ## stack habitat plots----
-(hab3plot / bp_postpts) + plot_layout(axes="collect_y")
+(hab_postpts / bp_postpts) + plot_layout(axes="collect_y")
 
 #Figure S2----
 ## a) depth*benthic/pelagic----
@@ -348,11 +348,13 @@ soc2_postpts <- msoc_imp.epred |>
   ggplot(aes(x = sociality.bin,
              y = .epred)) +
   stat_pointinterval(point_interval=median_hdci) +
-  geom_point(aes(x = as.numeric(sociality.bin), y = CNS.1), data = s2_imp, position=position_jitter(width = 0.15), colour='blue') +
+  geom_point(aes(x = as.numeric(sociality.bin)-1, y = CNS.1), data = s2_imp, position=position_jitter(width = 0.15), colour='blue') +
   labs(x="Sociality type", y = "CNS") +
   scale_x_continuous(breaks=c(0,1), labels=(c("solitary","gregarious"))) + theme(axis.text.x=element_text(size=11)) + theme_classic()
 
 soc2_postpts <- soc2_postpts + theme_classic()
+soc2_postpts
+save(soc2_postpts, file="nov24_soc2_postpts.rda")
 
 ### sociality 3 categories----
 s3_imp <- st.cephdat
@@ -382,6 +384,8 @@ soc3_postpts <-
   labs(x="Sociality type", y = "CNS") +
   scale_x_continuous(breaks=c(1,2,3), labels=(c("solitary", "tolerant", "gregarious"))) + theme(axis.text.x=element_text(size=11)) + theme_classic()
 soc3_postpts <- soc3_postpts + theme_classic()
+soc3_postpts
+save(soc3_postpts, file="soc3_postpts.rda")
 
 ## b) maturity----
 ### maximum age----
@@ -436,7 +440,6 @@ var_imp_ci5 <- apply(var_imp5[var_miss_idx5,], 2, tidybayes::hdci)
 
 # get CNS size for species with imputed predictor
 Ymi5 <- st.cephdat$CNS.1[var_miss_idx5]
-View(Ymi1)
 
 # collect in df for plotting
 Xmiss5 <- data.frame(Ymi=Ymi5, mu = var_imp_mu5, cl = var_imp_ci5[1,], cu = var_imp_ci5[2,])
@@ -453,7 +456,9 @@ plot_matage.min <- ggplot() +
   labs(x="Minimum age of sexual maturity", y = "CNS") +
   theme(axis.text.x=element_text(size=11)) + theme_classic()
 plot_matage.min
+save(plot_matage.min, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/plot_matage.min.rda")
 
 ## combine sociality and maturity plots----
-socmatplot <- ((soc2_postpts / soc3_postpts) | (plot_matage.max / plot_matage.min)) + plot_layout(axes='collect_y', guides='collect')
-
+load("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/plot_matage.max.rda")
+socmatplot <- ((soc2_postpts / soc3_postpts) + plot_layout(axes='collect_y', guides='collect') | (plot_matage.max / plot_matage.min)) 
+#manually edited to remove redundant CNS labels 

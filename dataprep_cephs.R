@@ -24,16 +24,6 @@ st.cephdat <- st.cephdat[,-c(12,13)] #remove original latitude columns with nega
 
 write.csv(st.cephdat, "/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/st.cephdat.csv", row.names=FALSE)
 
-cephtrees100 <- read.nexus("cephtrees100.trees")
-
-#list of correlation matrices for 100 trees----
-ceph100cormat <-list()
-for (i in 1:length(cephtrees100) ) {
-  ceph100cormat[[i]] <- vcv.phylo(cephtrees100[[i]], corr=TRUE)
-}
-
-save(ceph100cormat, file="ceph100_cormat.rda")
-
 #DAG code----
 cephdag <- dagitty("dag {
 ML -> CNS

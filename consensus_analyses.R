@@ -37,7 +37,6 @@ m.MLst <- brm(bf(CNS.1 ~ mi(ML.1) + (1 | gr(phy.species, cov = cormat))) +
                    cores = 4)
 summary(m.MLst)
 save(m.MLst, file="m.MLst.rda")
-load()
 
 #age of sexual maturity----
 ## with maximum age of sexual maturity and lifespan----
@@ -195,16 +194,8 @@ m.def.empty <- brm(bf(CNS.1 ~ mi(ML.1) +  mi(defense.repertoire) + articles.read
                     backend="cmdstanr")
 
 m.def.constrained <- constrained_imputation(model = m.def.empty, vars = "defense.repertoire")
-
 summary(m.def.constrained)
 save(m.def.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.def.rda")
-effective_sample(m.def.constrained)
-get_variables(m.def.constrained)
-
-mcmc_acf(m.def.constrained, pars=c("bsp_CNS1_midefense.repertoire"))
-
-mcmc_dens_chains(m.def.constrained, pars=c("bsp_CNS1_midefense.repertoire"))
-
 
 ## foraging repertoire----
 m.hunt.empty <- brm(bf(CNS.1 ~ mi(ML.1) +  mi(foraging.repertoire) + articles.read + benthic + depth.mean + pos.latmean + (1|gr(phy.species,cov=cormat))) +
@@ -241,7 +232,6 @@ m.diet.constrained <- constrained_imputation(model = m.diet.empty,
 
 summary(m.diet.constrained)
 save(m.diet.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/nov2024_fits/m.diet.rda")
-load("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.diet.rda")
 
 ## diet-benthic interaction----
 m.dhab.empty <- brm(bf(CNS.1 ~ mi(ML.1) + mi(diet.breadth)*benthic + depth.mean + pos.latmean + articles.read + (1|gr(phy.species,cov=cormat))) +
@@ -258,7 +248,6 @@ m.dhab.empty <- brm(bf(CNS.1 ~ mi(ML.1) + mi(diet.breadth)*benthic + depth.mean 
 m.dhab.constrained <- constrained_imputation(model = m.dhab.empty, vars = "diet.breadth")
 summary(m.dhab.constrained)
 save(m.dhab.constrained, file="/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/nov2024_fits/m.dhab.rda")
-min(apply(as_draws_df(m.dhab.constrained, "^Ymi_dietbreadth", regex = TRUE)[which(is.na(st.cephdat$diet.breadth)),], 2, median))
 
 ## number of predator groups----
 m.preds.empty <- brm(bf(CNS.1 ~ mi(ML.1) + mi(predator.breadth) + depth.mean + benthic + articles.read + (1 | gr(phy.species, cov = cormat))) +
@@ -318,7 +307,7 @@ m.hab <- brm(bf(CNS.1 ~ mi(ML.1) + habitat3 + WoS + (1 | gr(phy.species, cov = c
               cores = 4)
 summary(m.hab)
 save(m.hab, file="m.hab.rda")
-load("/Users/kiranbasava/nonhumans/di_cephproject/analyses/cephalopod_analyses/ceph-brain-evolution/nov2024_fits/m.hab.rda")
+
 ## latitude range----
 m.latrange <- brm(bf(CNS.1 ~ mi(ML.1) + lat.range + benthic + WoS + (1 | gr(phy.species, cov = cormat))) +
                     bf(ML.1 | mi() ~ 1 + lat.range + benthic + (1 | gr(phy.species, cov = cormat))),
@@ -330,8 +319,6 @@ m.latrange <- brm(bf(CNS.1 ~ mi(ML.1) + lat.range + benthic + WoS + (1 | gr(phy.
                   iter=4000,
                   cores = 4)
 summary(m.latrange)
-save(m.latrange, file="m.latrange.rda")
-load("nov2024_fits/m.latrange.rda")
 
 ## distance from equator----
 # rerunning August 2024 for distance from equator not mean 
